@@ -1,0 +1,5 @@
+1.symbol.py 完成符号类的编写，将作为运算和求导的基本单位。note：第一次提交时bp代码为递归，循环版本建设中
+2.ActivateFunction.py 完成激活函数和矩阵运算的接口,目前进度：矩阵乘法，sigmoid，relu
+3.BaseFunction.py 完成实际的前向计算和求导计算
+4.Environment.py 保存目前和以后的全局遍历，主要用于调试
+5.nn.py与lr.py为两个回归测试其中由于矩阵加法求导未完善，神经网络各层的bias使用了不常用的变量
