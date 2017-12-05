@@ -1,7 +1,7 @@
 # 已实现的API预览
 
-symbol
----------------------------------
+## symbol
+
 ### 1.Symbol()
 
 #### class method:
@@ -15,8 +15,9 @@ set_value()
 clear_all()
 
 gradiant_decent()
-ActivateFunction
----------------------------------
+
+##ActivateFunction
+
 ### 1.ReLu
 
 ### 2.Sigmoid
