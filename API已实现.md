@@ -16,7 +16,7 @@ clear_all()
 
 gradiant_decent()
 
-##ActivateFunction
+## ActivateFunction
 
 ### 1.ReLu
 
