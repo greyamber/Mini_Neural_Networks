@@ -14,6 +14,7 @@ set_value()
 
 clear_all()
 
+gradiant_decent()
 ActivateFunction
 ---------------------------------
 ### 1.ReLu
