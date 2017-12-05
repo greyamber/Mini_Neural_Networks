@@ -42,15 +42,38 @@ class ConstantFunction(Function):
         return None, None
 
 
-class Additional(Function):
+def mat_oper_vec(x1shape, x2shape, x1g, x2g):
+    if x1shape != x1g.shape:
+        if np.sum(x1g, axis=1).shape == x1shape:
+            x1g = np.sum(x1g, axis=1)
+        elif np.sum(x1g, axis=0).shape == x1shape:
+            x1g = np.sum(x1g, axis=0)
+        else:
+            x1g = np.ones(x1shape) + x1g
+
+    if x2shape != x2g.shape:
+        if np.sum(x2g, axis=1, keepdims=True).shape == x2shape:
+            x2g = np.sum(x2g, axis=1, keepdims=True)
+        elif np.sum(x2g, axis=0, keepdims=True).shape == x2shape:
+            x2g = np.sum(x2g, axis=0, keepdims=True)
+        else:
+            x2g = np.ones(x2shape) + x2g
+    return x1g, x2g
+
+
+class Addition(Function):
     def __init__(self, x1=None, x2=None):
-        super(Additional, self).__init__("Add", x1, x2)
+        super(Addition, self).__init__("Add", x1, x2)
 
     def fp_method(self):
         return self.x1.value + self.x2.value
 
     def bp_method(self, y):
-        return y, y
+        # mat + mat or vec + vec or num + num
+        x1g = x2g = y
+        # mat + vec or vec + mat
+        x1g, x2g = mat_oper_vec(self.x1.value.shape, self.x2.value.shape, x1g, x2g)
+        return x1g, x2g
 
 
 class Multiplication(Function):
@@ -63,6 +86,7 @@ class Multiplication(Function):
     def bp_method(self, y):
         x1g = self.x2.value * y
         x2g = self.x1.value * y
+        x1g, x2g = mat_oper_vec(self.x1.value.shape, self.x2.value.shape, x1g, x2g)
         return x1g, x2g
 
 
@@ -76,6 +100,7 @@ class Subtraction(Function):
     def bp_method(self, y):
         x1g = y
         x2g = -y
+        x1g, x2g = mat_oper_vec(self.x1.value.shape, self.x2.value.shape, x1g, x2g)
         return x1g, x2g
 
 
@@ -89,6 +114,7 @@ class Division(Function):
     def bp_method(self, y):
         x1g = 1.0 / self.x2.value * y
         x2g = y * self.x1.value * (-1.0) / self.x2.value / self.x2.value
+        x1g, x2g = mat_oper_vec(self.x1.value.shape, self.x2.value.shape, x1g, x2g)
         return x1g, x2g
 
 

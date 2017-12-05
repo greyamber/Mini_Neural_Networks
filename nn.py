@@ -13,29 +13,33 @@ b2 = Symbol(Trainable=True, name="Trainable")
 w3 = Symbol(name="Trainable", Trainable=True)
 b3 = Symbol(name="Trainable", Trainable=True)
 
-w1.set_value(np.random.random([1, 10]))
-b1.set_value(np.zeros([150, 10]))
+w4 = Symbol(name="Trainable", Trainable=True)
+b4 = Symbol(name="Trainable", Trainable=True)
 
-w3.set_value(np.random.random([10, 10]))
-b3.set_value(np.zeros([150, 10]))
+w1.set_value(np.random.random([1, 10]) - 0.5)
+b1.set_value(np.zeros([1, 10]) + 0.01)
 
-w2.set_value(np.random.random([10,1]))
-b2.set_value(np.zeros([150,1]))
+w3.set_value(np.random.random([10, 10]) - 0.5)
+b3.set_value(np.zeros([1, 10]) + 0.01)
+
+w4.set_value(np.random.random([10, 10]) - 0.5)
+b4.set_value(np.zeros([1, 10]) + 0.01)
+
+w2.set_value(np.random.random([10, 1]) - 0.5)
+b2.set_value(np.zeros([1, 1]) + 0.01)
 
 xs = Symbol()
 ys = Symbol()
-
-l1 = AF.ReLu(AF.MatDot(xs, w1) + b1)
+t1 = AF.MatDot(xs, w1) + b1
+l1 = AF.ReLu(t1)
 l2 = AF.ReLu(AF.MatDot(l1, w3) + b3)
-h = AF.MatDot(l2, w2) + b2
+l3 = AF.ReLu(AF.MatDot(l2, w4) + b4)
+h = AF.MatDot(l3, w2) + b2
 
-loss = (ys - h) * (ys - h)
+loss = AF.reduce_sum((ys - h) * (ys - h), [150, 1]) / 150.0
 
-
-#x = np.array(list(zip(np.arange(-100,100), np.arange(-100,100))))
-#y = np.sum(x, axis=0) * 0.01
-x = np.arange(-100, 100).reshape([-1, 1])
-y = x*x / 1000 + 0.3*x + 0.001*x*x*x
+x = np.arange(-100, 100).reshape([-1, 1]) / 100
+y = 2*x*x
 
 x_train = x[0:150]
 y_train = y[0:150]
@@ -44,13 +48,14 @@ x_test = x[150:]
 y_test = y[150:]
 
 
-for i in range(100):
+for i in range(1000):
     xs.set_value(x_train)
     ys.set_value(y_train)
     loss.fp()
-    print(w2.value)
     loss.bp()
-    loss.gradient_decent(0.01)
+    lr = 0.01
+    print(loss.value)
+    loss.gradient_decent(lr)
     loss.clear_all()
 
 xs.set_value(x_train)

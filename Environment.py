@@ -2,3 +2,4 @@
 import numpy as np
 
 ROOT_COLLECTION = []
+AUTO_COLLECTION = []

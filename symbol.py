@@ -7,10 +7,12 @@ import numpy as np
 
 
 class Symbol(object):
-    def __init__(self, source_list=RootFunction(), name=None, Trainable=False):
+    def __init__(self, source_list=RootFunction(), name=None, Trainable=False, keep_value=None):
         self.Trainable = Trainable
-        if source_list.func_type == "Root":
+        if source_list.func_type == "Root" and keep_value is None:
             env.ROOT_COLLECTION.append(self)
+        if keep_value is not None:
+            env.AUTO_COLLECTION.append([self, keep_value])
         if name is None:
             self.name = "unknown_name_" + str(id(self))
         else:
@@ -37,7 +39,7 @@ class Symbol(object):
             value = other
             other = Symbol(ConstantFunction(), name="Constant", Trainable=False)
             other.set_value(value)
-        return Symbol(Additional(self, other), name=None)
+        return Symbol(Addition(self, other), name=None)
 
     def __sub__(self, other):
         if not isinstance(other, Symbol):
@@ -66,7 +68,7 @@ class Symbol(object):
 
     def set_value(self, value):
         self.value = np.array(value)
-        if self.source_list.func_type == "Root":
+        if self.source_list.func_type == "Root" or self.source_list.func_type == "Constant":
             self.source_list.value = value
 
     def clear_all(self):  # 递归算法，将改成循环
@@ -90,8 +92,10 @@ class Symbol(object):
         self.value = self.source_list.fp_method()
 
     def fp(self):
+        for item in env.AUTO_COLLECTION:
+            item[0].set_value(item[1])
         for rs in env.ROOT_COLLECTION:
-            assert rs.value is not None, "Root symbol " + str(rs.name) + " has no value."
+            assert rs.value is not None, "Root symbol " + str(rs.name) + " has no value." + str(rs)
         self._fp()
 
     def _bp(self, gradient):  # 递归算法，将改成循环
@@ -125,7 +129,7 @@ class Symbol(object):
 
     def gradient_decent(self, lr=0.01):
         if self.Trainable:
-            self.value -= self.gradient * lr
+            self.set_value(self.value - self.gradient * lr)
         x1 = self.source_list.x1
         x2 = self.source_list.x2
         if x1 is not None:

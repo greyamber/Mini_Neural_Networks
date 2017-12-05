@@ -1,4 +1,5 @@
 import Base_Function as bf
+import Environment as env
 import symbol
 import numpy as np
 
@@ -15,36 +16,42 @@ def MatDot(x1, x2):
     return symbol.Symbol(bf._MatDot(x1, x2), name="matdot")
 
 
+def reduce_sum(x1, x1shape, axis=None):
+    axis1_feed = np.ones([x1shape[1], 1])
+    axis1 = symbol.Symbol(name="reduce", keep_value=axis1_feed)
+    axis0_feed = np.ones([1, x1shape[0]])
+    axis0 = symbol.Symbol(name="reduce", keep_value=axis0_feed)
+
+    if axis is None:
+        ret = MatDot(axis0, x1)
+        ret = MatDot(ret, axis1)
+    elif axis == 0:
+        ret = MatDot(axis0, x1)
+    else:
+        ret = MatDot(x1, axis1)
+    return ret
+
 if __name__ == "__main__":
-    x1 = symbol.Symbol(name="??")
+    x1 = symbol.Symbol()
     x2 = symbol.Symbol()
+    b2 = symbol.Symbol()
+    b3 = symbol.Symbol()
     x3 = symbol.Symbol()
+    x1.set_value(np.array([[1, 2]]))
+    x2.set_value(np.array([[1,3],[4,5]]))
+    x3.set_value(np.array([[2,1],[1,4]]))
+    b2.set_value(np.ones([1,2]))
+    b3.set_value(np.ones([1,2]))
 
-    y = x1 / x2 + x2 * (x3 + x1) / 10 - x1
+    l1 = MatDot(x1, x2) + b2
+    l2 = MatDot(l1, x3)
+    l3 = reduce_sum(l2, [1,2]) / 10
 
-    x1.set_value(np.array([1, 2, 3]))
-    x2.set_value(np.array([2, 3, 4]))
-    x3.set_value(np.array([3, 4, 5]))
-
-    y = ReLu(y)
-
-    y.fp()
-    y.bp()
-    print(y.value)
-    print(y.gradient)
-    print(x1.gradient)
+    l3.fp()
+    l3.bp()
+    print(l2.value)
+    print(l3.value)
+    print(b2.gradient)
     print(x2.gradient)
-    print(x3.gradient)
 
-    x4 = symbol.Symbol()
-    x5 = symbol.Symbol()
 
-    y2 = MatDot(x4, x5)
-
-    x4.set_value(np.array([[1, 1], [1, 2]]))
-    x5.set_value(np.array([[1, 2, 3], [1, 5, 6]]))
-    y2.fp()
-    y2.bp()
-    print(y2.value)
-    print(y2.gradient)
-    print(x5.gradient)
