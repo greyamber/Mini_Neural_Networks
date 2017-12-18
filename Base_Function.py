@@ -4,6 +4,22 @@ import numpy as np
 
 
 class Function(object):
+    """
+    func_type：操作名，注意Root，Constant等有特殊用途，继承时不要使用已有的type
+    何时需要自定义新的fp与bp：
+    1.认为该操作用已有的加减乘除relu和sigmoid等难以实现
+    2.认为用已有方法实现后性能很差
+    3.编写独有的cuda计算
+    4.认为最好在确定之前的操作的具体值后才计算该操作的维度等必要信息（比如reduce_sum等）
+    如何自定义新的fp与bp操作：
+    1.继承Function类，定义一个独有的func_type字符串
+    2.只支持二元或一元操作，左数为x1，右数位x2；x1，x2为Symbol类
+    3.重写fp_method(self)：前向传播的函数，使用x1.value与x2.value，返回一个值（np.array）
+    4.重写bp_method(self, y)：反向传播的函数，y为上一层的梯度。返回x1g和x2g两个梯度
+      x2未使用则x2g为None
+      例子：out=g(f(x)), out对x求导：y = dout/df(x) --> dout/dx = y*df(x)/d(x)
+    5.注意期间尽量不要改变维度，即：keep_dim
+    """
     def __init__(self, func_type, x1=None, x2=None):
         self.func_type = func_type
         self.x1 = x1
@@ -14,7 +30,7 @@ class Function(object):
         pass
 
     @abstractmethod
-    def fp_method(self, y):
+    def fp_method(self):
         pass
 
 
@@ -43,6 +59,14 @@ class ConstantFunction(Function):
 
 
 def mat_oper_vec(x1shape, x2shape, x1g, x2g):
+    """
+    实现向量+矩阵，数+向量，数+矩阵的倒数维度变换
+    :param x1shape: 第一个参数的shape
+    :param x2shape: 第二个参数的shape
+    :param x1g: 第一个参数（梯度）
+    :param x2g: 第二个参数（梯度）
+    :return: 修饰后的梯度（x1g，x2g）
+    """
     if x1shape != x1g.shape:
         if np.sum(x1g, axis=1).shape == x1shape:
             x1g = np.sum(x1g, axis=1)
@@ -62,7 +86,7 @@ def mat_oper_vec(x1shape, x2shape, x1g, x2g):
 
 
 class Addition(Function):
-    def __init__(self, x1=None, x2=None):
+    def __init__(self, x1, x2):
         super(Addition, self).__init__("Add", x1, x2)
 
     def fp_method(self):
@@ -77,7 +101,7 @@ class Addition(Function):
 
 
 class Multiplication(Function):
-    def __init__(self, x1=None, x2=None):
+    def __init__(self, x1, x2):
         super(Multiplication, self).__init__("Mul", x1, x2)
 
     def fp_method(self):
@@ -91,7 +115,7 @@ class Multiplication(Function):
 
 
 class Subtraction(Function):
-    def __init__(self, x1=None, x2=None):
+    def __init__(self, x1, x2):
         super(Subtraction, self).__init__("Sub", x1, x2)
 
     def fp_method(self):
@@ -105,7 +129,7 @@ class Subtraction(Function):
 
 
 class Division(Function):
-    def __init__(self, x1=None, x2=None):
+    def __init__(self, x1, x2):
         super(Division, self).__init__("Div", x1, x2)
 
     def fp_method(self):
@@ -118,8 +142,8 @@ class Division(Function):
         return x1g, x2g
 
 
-class _ReLu(Function):  # under building!
-    def __init__(self, x1=None, x2=None):
+class _ReLu(Function):
+    def __init__(self, x1, x2=None):
         super(_ReLu, self).__init__("Relu", x1, x2)
 
     def fp_method(self):
@@ -130,7 +154,7 @@ class _ReLu(Function):  # under building!
 
 
 class _Sigmoid(Function):
-    def __init__(self, x1=None, x2=None):
+    def __init__(self, x1, x2=None):
         super(_Sigmoid, self).__init__("Sigmoid", x1, x2)
 
     def fp_method(self):
@@ -143,25 +167,45 @@ class _Sigmoid(Function):
 
 
 class _MatDot(Function):
-    def __init__(self, x1=None, x2=None):
+    def __init__(self, x1, x2):
         super(_MatDot, self).__init__("MatDot", x1, x2)
 
     def fp_method(self):
         return np.array(np.dot(self.x1.value, self.x2.value))
 
     def bp_method(self, y):
-        x1g = np.zeros(self.x1.value.shape)
-        for i in range(self.x1.value.shape[0]):
-            for j in range(self.x1.value.shape[1]):
-                for m in range(self.x2.value.shape[1]):
-                    x1g[i][j] += self.x2.value[j][m] * y[i][m]
+        x1g = np.dot(y, np.matrix(self.x2.value).T)
+        # equal to :
+        # x1g = np.zeros(self.x1.value.shape)
+        # for i in range(self.x1.value.shape[0]):
+        #    for j in range(self.x1.value.shape[1]):
+        #        for m in range(self.x2.value.shape[1]):
+        #            x1g[i][j] += self.x2.value[j][m] * y[i][m]
 
-        x2g = np.zeros(self.x2.value.shape)
-        for j in range(self.x2.value.shape[1]):
-            for i in range(self.x2.value.shape[0]):
-                for n in range(self.x1.value.shape[0]):
-                    x2g[i][j] += self.x1.value[n][i] * y[n][j]
-        return x1g, x2g
+        x2g = np.dot(np.matrix(self.x1.value).T, y)
+        # equal to :
+        # x2g = np.zeros(self.x2.value.shape)
+        # for j in range(self.x2.value.shape[1]):
+        #     for i in range(self.x2.value.shape[0]):
+        #         for n in range(self.x1.value.shape[0]):
+        #             x2g[i][j] += self.x1.value[n][i] * y[n][j]
+
+        return np.array(x1g), np.array(x2g)
+
+
+class _Softmax(Function):
+    def __init__(self, x1, x2=None):
+        super(_Softmax, self).__init__("Softmax", x1, x2)
+
+    def fp_method(self):
+        exp = np.exp(self.x1.value)
+        exp_sum = np.sum(exp, axis=1)
+        return exp / exp_sum
+
+    def bp_method(self, y):
+        softmax = self.fp_method()
+        x1g = softmax(1 - softmax) * y
+        return x1g, None
 
 
 if __name__ == "__main__":

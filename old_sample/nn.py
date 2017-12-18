@@ -1,4 +1,4 @@
-from symbol import Symbol
+from Base_Symbol import Symbol
 import numpy as np
 import ActivateFunctions as AF
 from matplotlib import pyplot as plt
@@ -48,7 +48,7 @@ x_test = x[150:]
 y_test = y[150:]
 
 
-for i in range(1000):
+for i in range(10000):
     xs.set_value(x_train)
     ys.set_value(y_train)
     loss.fp()

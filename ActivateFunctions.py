@@ -1,26 +1,26 @@
 import Base_Function as bf
 import Environment as env
-import symbol
+import Base_Symbol
 import numpy as np
 
 
 def Sigmoid(x1):
-    return symbol.Symbol(bf._Sigmoid(x1), name="Sigmoid")
+    return Base_Symbol.Symbol(bf._Sigmoid(x1), name="Sigmoid")
 
 
 def ReLu(x1):
-    return symbol.Symbol(bf._ReLu(x1), name="ReLu")
+    return Base_Symbol.Symbol(bf._ReLu(x1), name="ReLu")
 
 
 def MatDot(x1, x2):
-    return symbol.Symbol(bf._MatDot(x1, x2), name="matdot")
+    return Base_Symbol.Symbol(bf._MatDot(x1, x2), name="matdot")
 
 
 def reduce_sum(x1, x1shape, axis=None):
     axis1_feed = np.ones([x1shape[1], 1])
-    axis1 = symbol.Symbol(name="reduce", keep_value=axis1_feed)
+    axis1 = Base_Symbol.Symbol(name="reduce", keep_value=axis1_feed)
     axis0_feed = np.ones([1, x1shape[0]])
-    axis0 = symbol.Symbol(name="reduce", keep_value=axis0_feed)
+    axis0 = Base_Symbol.Symbol(name="reduce", keep_value=axis0_feed)
 
     if axis is None:
         ret = MatDot(axis0, x1)
@@ -31,12 +31,16 @@ def reduce_sum(x1, x1shape, axis=None):
         ret = MatDot(x1, axis1)
     return ret
 
+def softmax(x1):
+    return Base_Symbol.Symbol(bf._Softmax(x1), name="softmax")
+
+
 if __name__ == "__main__":
-    x1 = symbol.Symbol()
-    x2 = symbol.Symbol()
-    b2 = symbol.Symbol()
-    b3 = symbol.Symbol()
-    x3 = symbol.Symbol()
+    x1 = Base_Symbol.Symbol()
+    x2 = Base_Symbol.Symbol()
+    b2 = Base_Symbol.Symbol()
+    b3 = Base_Symbol.Symbol()
+    x3 = Base_Symbol.Symbol()
     x1.set_value(np.array([[1, 2]]))
     x2.set_value(np.array([[1,3],[4,5]]))
     x3.set_value(np.array([[2,1],[1,4]]))

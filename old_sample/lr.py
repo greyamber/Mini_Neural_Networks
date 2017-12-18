@@ -1,4 +1,4 @@
-from symbol import Symbol
+from Base_Symbol import Symbol
 import numpy as np
 import ActivateFunctions as AF
 from matplotlib import pyplot as plt
@@ -14,8 +14,8 @@ h = AF.MatDot(xs, w1)
 
 loss = (ys - h) * (ys - h)
 
-x = np.array(np.arange(-100, 100)).reshape([-1, 1])
-y = x / 100 + x*x
+x = np.array(np.arange(-100, 100)).reshape([-1, 1]) / 100
+y = x / 100
 
 
 x_train = x[0:150]
@@ -31,7 +31,7 @@ for i in range(100):
     loss.fp()
     print(w1.value)
     loss.bp()
-    loss.gradient_decent(0.000001)
+    loss.gradient_decent(0.001)
     loss.clear_all()
 
 xs.set_value(x_train)

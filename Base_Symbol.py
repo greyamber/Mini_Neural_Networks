@@ -7,6 +7,24 @@ import numpy as np
 
 
 class Symbol(object):
+    """
+    基础类Symbol
+    未定义非本项目操作对Symbol类的value操作或set_value()操作
+    请使用Variable
+    构造：
+    source_list:该符号的来源，RootFunction代表是直接定义的，非计算得到
+    name：符号名，通过python id使其独有
+    Trainable： 是否可训练
+    keep_value： 用于训练时的自动feed，见其fp和bp
+    成员：
+    value：值
+    gradient：梯度
+    clear_all()：暂时用来清除旧gradient和value的方法，以后会有大的改动
+    set_value(): 设置Symbol的value，主要考虑了是否是root function产生的符号
+    fp（）：前向传播
+    bp（）：反向传播
+    push_grad()：暂存梯度的部分（和），用于bp（）
+    """
     def __init__(self, source_list=RootFunction(), name=None, Trainable=False, keep_value=None):
         self.Trainable = Trainable
         if source_list.func_type == "Root" and keep_value is None:
@@ -74,7 +92,7 @@ class Symbol(object):
     def clear_all(self):  # 递归算法，将改成循环
         self.gradient_collection = []
         self.gradient = None
-        if self.source_list.func_type != "Constant" and (not self.Trainable):
+        if (self.source_list.func_type != "Constant") and (not self.Trainable):
             self.value = None
         x1 = self.source_list.x1
         x2 = self.source_list.x2
@@ -137,3 +155,44 @@ class Symbol(object):
         if x2 is not None:
             x2.gradient_decent(lr)
 
+
+class Variable(Symbol):
+    """
+    对Symbol的包装，仅限训练的变量使用。
+
+    构造：
+    name：符号名，通过python id使其独有
+    Trainable： 是否可训练, 如果不可训练，设置keep_value
+    成员：
+    value：值
+    gradient：梯度
+    clear_all()：暂时用来清除旧gradient和value的方法，以后会有大的改动
+    set_value(): 设置Symbol的value，主要考虑了是否是root function产生的符号
+    fp（）：前向传播
+    bp（）：反向传播
+    push_grad()：暂存梯度的部分（和），用于bp（）
+    """
+    def __init__(self, init, name=None, Trainable=True):
+        super(Variable, self).__init__(source_list=RootFunction(), name=name,
+                                       Trainable=Trainable)
+        self.set_value(init)
+
+        if not Trainable:
+            env.AUTO_COLLECTION.append([self, init])
+
+    def assign(self, value):
+        self.set_value(value)
+        for v_v in env.AUTO_COLLECTION:
+            if v_v[0] is self:
+                v_v[1] = value
+                break
+        return [self, value]
+
+
+class Placeholder(Symbol):
+    def __init__(self, name=None):
+        super(Placeholder, self).__init__(source_list=RootFunction(), name=name,
+                                          Trainable=False, keep_value=None)
+
+    def feed(self, value):
+        self.set_value(value)
