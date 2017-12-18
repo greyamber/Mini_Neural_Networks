@@ -61,7 +61,7 @@
 x1shape 参数了。
 
 #### 4.softmax(x1)
-类似ReLu
+类似ReLu,未经详细测试
 
 ## layers.py
 ### dense(inputs, init_w, init_b=None, activation_func=None)
