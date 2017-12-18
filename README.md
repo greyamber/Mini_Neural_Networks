@@ -18,3 +18,7 @@ pandas 对应Python版本
 完成基本的+,-,*,/，ReLu，Sigmoid，矩阵乘法，求和等操作
 
 样例：lr.py,nn.py,layers.py
+
+# 作者
+Lance Grey
+308218867@qq.com
