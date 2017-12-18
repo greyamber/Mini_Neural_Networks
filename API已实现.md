@@ -13,7 +13,7 @@
 ### 成员
 * value:值，numpy数组或None（未初始化）
 
-* gradient:梯度，numpy数组或None
+* gradiant:梯度，numpy数组或None
 ### 操作
 * +,-，*，/（规则和numpy规则相同）
 
