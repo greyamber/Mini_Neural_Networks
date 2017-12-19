@@ -64,6 +64,7 @@ x1shape 参数了。
 类似ReLu,未经详细测试
 
 ## layers.py
+layers.py中的测试函数大概规定以后框架的用法
 ### dense(inputs, init_w, init_b=None, activation_func=None)
 * inputs: 输入的symbol或其子类
 * init_w,init_b：w和b的初始值，如果b为None，不使用偏置
