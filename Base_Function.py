@@ -36,7 +36,7 @@ class Function(object):
 
 class RootFunction(Function):
     def __init__(self, x1=None, x2=None):
-        super(RootFunction, self).__init__("Root", x1, x2)
+        super(RootFunction, self).__init__("Root", None, None)
         self.value = None
 
     def fp_method(self):
@@ -48,7 +48,7 @@ class RootFunction(Function):
 
 class ConstantFunction(Function):
     def __init__(self, x1=None, x2=None):
-        super(ConstantFunction, self).__init__("Constant", x1, x2)
+        super(ConstantFunction, self).__init__("Constant", None, None)
         self.value = None
 
     def fp_method(self):
@@ -142,9 +142,9 @@ class Division(Function):
         return x1g, x2g
 
 
-class _ReLu(Function):
+class BaseReLu(Function):
     def __init__(self, x1, x2=None):
-        super(_ReLu, self).__init__("Relu", x1, x2)
+        super(BaseReLu, self).__init__("Relu", x1, x2)
 
     def fp_method(self):
         return np.where(self.x1.value > 0, self.x1.value, np.zeros(self.x1.value.shape))
@@ -153,9 +153,9 @@ class _ReLu(Function):
         return np.where(self.x1.value > 0, np.zeros(self.x1.value.shape)+y, np.zeros(self.x1.value.shape)), None
 
 
-class _Sigmoid(Function):
+class BaseSigmoid(Function):
     def __init__(self, x1, x2=None):
-        super(_Sigmoid, self).__init__("Sigmoid", x1, x2)
+        super(BaseSigmoid, self).__init__("Sigmoid", x1, x2)
 
     def fp_method(self):
         return 1.0 / (1.0 + np.exp(-self.x1.value))
@@ -166,9 +166,9 @@ class _Sigmoid(Function):
         return y * (1 - x_) * x_, None
 
 
-class _MatDot(Function):
+class BaseMatDot(Function):
     def __init__(self, x1, x2):
-        super(_MatDot, self).__init__("MatDot", x1, x2)
+        super(BaseMatDot, self).__init__("MatDot", x1, x2)
 
     def fp_method(self):
         return np.array(np.dot(self.x1.value, self.x2.value))
@@ -193,25 +193,54 @@ class _MatDot(Function):
         return np.array(x1g), np.array(x2g)
 
 
-class _Softmax(Function):
+class BaseSoftmax(Function):
     def __init__(self, x1, x2=None):
-        super(_Softmax, self).__init__("Softmax", x1, x2)
+        super(BaseSoftmax, self).__init__("Softmax", x1, x2)
 
     def fp_method(self):
         exp = np.exp(self.x1.value)
-        exp_sum = np.sum(exp, axis=1)
+        exp_sum = np.sum(exp, axis=1, keepdims=True)
         return exp / exp_sum
 
     def bp_method(self, y):
         softmax = self.fp_method()
-        x1g = softmax(1 - softmax) * y
+        x1g = softmax * (1 - softmax) * y
+        return x1g, None
+
+
+class Base_reduce_sum(Function):
+    def __init__(self, x1, axis=None):
+        super(Base_reduce_sum, self).__init__("reduce_sum", x1, None)
+        self.axis = axis
+
+    def fp_method(self):
+        if self.axis is not None:
+            ret = np.sum(self.x1.value, axis=self.axis, keepdims=True)
+        else:
+            ret = np.sum(self.x1.value, keepdims=True)
+        return ret
+
+    def bp_method(self, y):
+        x1g = np.ones(self.x1.value.shape, np.float32) * y
+        return x1g, None
+
+
+class BaseLog(Function):
+    def __init__(self, x1, x2=None):
+        super(BaseLog, self).__init__("Ln", x1, x2)
+
+    def fp_method(self):
+        return np.log(self.x1.value)
+
+    def bp_method(self, y):
+        x1g = y / self.x1.value
         return x1g, None
 
 
 if __name__ == "__main__":
     a = np.array([[-1,2,3],[0,1,-3],[6,3,1]])
-    b = np.array([[1,2],[3,4],[5,6]])
-    print(np.dot(a,b))
+    b = np.array([[1,1,3]])
+    print(a * b)
 
 
 

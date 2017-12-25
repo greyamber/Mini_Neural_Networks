@@ -21,16 +21,20 @@ if __name__ == "__main__":
     xs = BS.Placeholder()
     ys = BS.Placeholder()
     l1 = dense_layer(xs, init_w=np.random.random([1, 1]) - 0.5,
+                     init_b=np.zeros([1, 1]) + 0.01, activation_func=AF.Sigmoid)
+    l1 = dense_layer(l1, init_w=np.random.random([1, 1]) - 0.5,
+                     init_b=np.zeros([1, 1]) + 0.01, activation_func=AF.Sigmoid)
+    l1 = dense_layer(l1, init_w=np.random.random([1, 1]) - 0.5,
                      init_b=np.zeros([1, 1]) + 0.01)
 
-    loss = AF.reduce_sum((l1 - ys) * (l1 - ys), [200, 1])
+    loss = AF.reduce_sum((l1 - ys) * (l1 - ys))
 
-    for i in range(100):
+    for i in range(5000):
         xs.feed(np.arange(-100, 100).reshape([-1, 1]) / 100 - 0.5)
         ys.feed(np.arange(-100, 100).reshape([-1, 1]) / 10 + 9)
         loss.fp()
         loss.bp()
-        lr = 0.001
+        lr = 0.0001
         print(loss.value)
         loss.gradient_decent(lr)
         loss.clear_all()

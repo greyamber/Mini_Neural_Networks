@@ -19,6 +19,9 @@ pandas 对应Python版本
 
 样例：lr.py,nn.py,layers.py
 
+# 样例：
+new_demo/softmax.py
+
 # 作者
 Lance Grey
 308218867@qq.com

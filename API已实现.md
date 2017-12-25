@@ -20,6 +20,15 @@
 * Relu等操作
 
 * 矩阵乘法
+## class Base_Symbol.Constant
+类似Variable，但用作常数
+## class Base_Symbol.Placeholder
+类似Variable，但用作占位符，用于训练时传入可变量
+
+目前还没具体实现shape等的检查，所以用处不大
+
+placeholder.feed(value)：用于传递数据给占位符
+
 ## class Base_Symbol.Symbol
 基础类Symbol
 
@@ -33,8 +42,6 @@
 
 * Trainable：是否可训练
 
-* keep_value：用于训练时的自动feed，见其fp和bp
-
 #### class method:
 
 * fp() ：前向传播，无返回
@@ -43,7 +50,7 @@
 
 * set_value(value)：设置该symbol的值
 
-* clear_all()：暂时用于清除梯度和值，会有改动
+* clear_all()：用于清除梯度和值
 
 * gradiant_decent(lr)：根据当前梯度做一次梯度下降
 
@@ -56,12 +63,14 @@
 #### 2.Sigmoid(x1)
 类似ReLu
 
-#### 3.reduce_sum(x1, x1shape, axis)
-暂时用静态方法实现，会改为动态，就不需要
-x1shape 参数了。
+#### 3.reduce_sum(x1, axis)
+求和，类似np.sum()
 
 #### 4.softmax(x1)
-类似ReLu,未经详细测试
+类似ReLu
+
+#### 5.log(x1)
+类似ReLu
 
 ## layers.py
 layers.py中的测试函数大概规定以后框架的用法
@@ -74,3 +83,4 @@ layers.py中的测试函数大概规定以后框架的用法
 ## Base_Function.py
 * 各个操作的实际实现，详情看Base_Function.py的注释
 * 如果必要，可以在这里添加新的自定义操作
+

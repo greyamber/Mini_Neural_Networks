@@ -5,34 +5,27 @@ import numpy as np
 
 
 def Sigmoid(x1):
-    return Base_Symbol.Symbol(bf._Sigmoid(x1), name="Sigmoid")
+    return Base_Symbol.Symbol(bf.BaseSigmoid(x1), name="Sigmoid")
 
 
 def ReLu(x1):
-    return Base_Symbol.Symbol(bf._ReLu(x1), name="ReLu")
+    return Base_Symbol.Symbol(bf.BaseReLu(x1), name="ReLu")
 
 
 def MatDot(x1, x2):
-    return Base_Symbol.Symbol(bf._MatDot(x1, x2), name="matdot")
+    return Base_Symbol.Symbol(bf.BaseMatDot(x1, x2), name="matdot")
 
 
-def reduce_sum(x1, x1shape, axis=None):
-    axis1_feed = np.ones([x1shape[1], 1])
-    axis1 = Base_Symbol.Symbol(name="reduce", keep_value=axis1_feed)
-    axis0_feed = np.ones([1, x1shape[0]])
-    axis0 = Base_Symbol.Symbol(name="reduce", keep_value=axis0_feed)
+def reduce_sum(x1, axis=None):
+    return Base_Symbol.Symbol(bf.Base_reduce_sum(x1, axis=axis), name="reduce_sum")
 
-    if axis is None:
-        ret = MatDot(axis0, x1)
-        ret = MatDot(ret, axis1)
-    elif axis == 0:
-        ret = MatDot(axis0, x1)
-    else:
-        ret = MatDot(x1, axis1)
-    return ret
 
 def softmax(x1):
-    return Base_Symbol.Symbol(bf._Softmax(x1), name="softmax")
+    return Base_Symbol.Symbol(bf.BaseSoftmax(x1), name="softmax")
+
+
+def log(x1):
+    return Base_Symbol.Symbol(bf.BaseLog(x1), name="Log")
 
 
 if __name__ == "__main__":
@@ -49,7 +42,7 @@ if __name__ == "__main__":
 
     l1 = MatDot(x1, x2) + b2
     l2 = MatDot(l1, x3)
-    l3 = reduce_sum(l2, [1,2]) / 10
+    l3 = reduce_sum(l2) / 10
 
     l3.fp()
     l3.bp()
